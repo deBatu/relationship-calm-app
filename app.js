@@ -2,7 +2,6 @@
   "use strict";
 
   const STORAGE_CODE_KEY = "calm_app_relationship_code";
-  const STORAGE_DEVICE_KEY = "calm_app_device_id";
   const STORAGE_ROLE_KEY = "calm_app_person_role";
   const STORAGE_ROMANCE_KEY = "calm_app_romance_enabled";
   const MAX_MEMORY_LINES_PER_PERSON = 3;
@@ -51,7 +50,6 @@
 
   const state = {
     relationshipCode: "",
-    deviceId: getOrCreateDeviceId(),
     personRole: "batu",
     romanceEnabled: true,
     popupTimerId: null,
@@ -181,9 +179,7 @@
       return;
     }
     if (section.key === "best_memory") {
-      const currentMineCount = state.lines.filter(
-        (line) => line.author_id === state.deviceId
-      ).length;
+      const currentMineCount = state.lines.filter(isMineAuthor).length;
       if (currentMineCount >= MAX_MEMORY_LINES_PER_PERSON) {
         setStatus("Für Erinnerungen sind maximal 3 Zeilen pro Person vorgesehen.", true);
         return;
@@ -192,7 +188,7 @@
 
     const payload = {
       relationship_code: state.relationshipCode,
-      author_id: state.deviceId,
+      author_id: getAuthorId(),
       section_key: section.key,
       line_text: lineText,
     };
@@ -250,8 +246,8 @@
     const section = SECTION_DEFINITIONS[state.sectionIndex];
     if (!section) return;
 
-    const mine = state.lines.filter((line) => line.author_id === state.deviceId);
-    const other = state.lines.filter((line) => line.author_id !== state.deviceId);
+    const mine = state.lines.filter(isMineAuthor);
+    const other = state.lines.filter((line) => !isMineAuthor(line));
 
     updatePersonLabels();
     el.sectionTitle.textContent = section.title;
@@ -306,8 +302,8 @@
         method: "GET",
         table: `section_lines?${params.toString()}`,
       });
-      const mine = rows.filter((row) => row.author_id === state.deviceId);
-      const other = rows.filter((row) => row.author_id !== state.deviceId);
+      const mine = rows.filter(isMineAuthor);
+      const other = rows.filter((row) => !isMineAuthor(row));
 
       updatePersonLabels();
       await loadClosureData();
@@ -341,7 +337,7 @@
           {
             relationship_code: state.relationshipCode,
             goal_text: sharedGoalText,
-            author_id: state.deviceId,
+            author_id: getAuthorId(),
             updated_at: new Date().toISOString(),
           },
         ],
@@ -356,7 +352,7 @@
         body: [
           {
             relationship_code: state.relationshipCode,
-            author_id: state.deviceId,
+            author_id: getAuthorId(),
             gratitude_text: gratitudeText,
             updated_at: new Date().toISOString(),
           },
@@ -407,7 +403,7 @@
 
     state.sharedGoalText = goalRows[0] && goalRows[0].goal_text ? goalRows[0].goal_text : "";
     state.gratitudeRows = gratitudeRows || [];
-    const myGratitude = state.gratitudeRows.find((row) => row.author_id === state.deviceId);
+    const myGratitude = state.gratitudeRows.find(isMineAuthor);
     el.sharedGoalInput.value = state.sharedGoalText || "";
     el.gratitudeInput.value = myGratitude ? myGratitude.gratitude_text : "";
     renderClosureSummary();
@@ -422,8 +418,8 @@
       el.sharedGoalText.classList.add("subtle");
     }
 
-    const mine = state.gratitudeRows.find((row) => row.author_id === state.deviceId) || null;
-    const other = state.gratitudeRows.find((row) => row.author_id !== state.deviceId) || null;
+    const mine = state.gratitudeRows.find(isMineAuthor) || null;
+    const other = state.gratitudeRows.find((row) => !isMineAuthor(row)) || null;
     const myName = state.personRole === "sevgi" ? "Sevgi" : "Batu";
     const otherName = state.personRole === "sevgi" ? "Batu" : "Sevgi";
 
@@ -502,6 +498,14 @@
     el.otherLinesTitle.textContent = otherName;
     el.finalMineTitle.textContent = myName;
     el.finalOtherTitle.textContent = otherName;
+  }
+
+  function getAuthorId() {
+    return state.personRole;
+  }
+
+  function isMineAuthor(row) {
+    return Boolean(row) && String(row.author_id || "") === getAuthorId();
   }
 
   function onRomanceToggleChange() {
@@ -606,16 +610,6 @@
     }
 
     return data;
-  }
-
-  function getOrCreateDeviceId() {
-    const existing = localStorage.getItem(STORAGE_DEVICE_KEY);
-    if (existing) return existing;
-
-    const id =
-      "d-" + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
-    localStorage.setItem(STORAGE_DEVICE_KEY, id);
-    return id;
   }
 
   function formatDate(isoString) {
