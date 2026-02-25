@@ -3,6 +3,7 @@
 
   const STORAGE_CODE_KEY = "calm_app_relationship_code";
   const STORAGE_DEVICE_KEY = "calm_app_device_id";
+  const STORAGE_ROLE_KEY = "calm_app_person_role";
   const SECTION_DEFINITIONS = [
     { key: "appreciation", title: "1) Was ich an dir mag / schaetze" },
     { key: "my_mistakes", title: "2) Was ich falsch gemacht habe" },
@@ -21,12 +22,14 @@
   const state = {
     relationshipCode: "",
     deviceId: getOrCreateDeviceId(),
+    personRole: "batu",
     sectionIndex: 0,
     lines: [],
   };
 
   const el = {
     relationshipCode: document.getElementById("relationshipCode"),
+    personRole: document.getElementById("personRole"),
     openSessionBtn: document.getElementById("openSessionBtn"),
     sessionStatus: document.getElementById("sessionStatus"),
 
@@ -39,6 +42,8 @@
     lineInput: document.getElementById("lineInput"),
     myLinesList: document.getElementById("myLinesList"),
     otherLinesList: document.getElementById("otherLinesList"),
+    myLinesTitle: document.getElementById("myLinesTitle"),
+    otherLinesTitle: document.getElementById("otherLinesTitle"),
     prevSectionBtn: document.getElementById("prevSectionBtn"),
     reloadSectionBtn: document.getElementById("reloadSectionBtn"),
     nextSectionBtn: document.getElementById("nextSectionBtn"),
@@ -48,6 +53,8 @@
     finalView: document.getElementById("finalView"),
     finalMine: document.getElementById("finalMine"),
     finalOther: document.getElementById("finalOther"),
+    finalMineTitle: document.getElementById("finalMineTitle"),
+    finalOtherTitle: document.getElementById("finalOtherTitle"),
 
     toolsCard: document.getElementById("toolsCard"),
     resetSessionBtn: document.getElementById("resetSessionBtn"),
@@ -64,6 +71,11 @@
     const savedCode = localStorage.getItem(STORAGE_CODE_KEY);
     if (savedCode) {
       el.relationshipCode.value = savedCode;
+    }
+    const savedRole = localStorage.getItem(STORAGE_ROLE_KEY);
+    if (savedRole === "batu" || savedRole === "sevgi") {
+      state.personRole = savedRole;
+      el.personRole.value = savedRole;
     }
 
     el.openSessionBtn.addEventListener("click", openSession);
@@ -85,12 +97,20 @@
       setStatus("Bitte einen gueltigen 6-stelligen Code eingeben.", true);
       return;
     }
+    const role = (el.personRole.value || "").trim();
+    if (role !== "batu" && role !== "sevgi") {
+      setStatus("Bitte waehlen, ob du Batu oder Sevgi bist.", true);
+      return;
+    }
 
     state.relationshipCode = normalizedCode;
+    state.personRole = role;
     localStorage.setItem(STORAGE_CODE_KEY, normalizedCode);
+    localStorage.setItem(STORAGE_ROLE_KEY, role);
     setStatus("Session geoeffnet.");
 
     showAppSections();
+    updatePersonLabels();
     await loadAndRenderCurrentSection();
     el.lineInput.focus();
   }
@@ -162,6 +182,7 @@
     const mine = state.lines.filter((line) => line.author_id === state.deviceId);
     const other = state.lines.filter((line) => line.author_id !== state.deviceId);
 
+    updatePersonLabels();
     el.sectionTitle.textContent = section.title;
     el.progressText.textContent = `Bereich ${state.sectionIndex + 1} von ${SECTION_DEFINITIONS.length}`;
     renderLinesList(el.myLinesList, mine, "Noch keine Zeile gespeichert.");
@@ -215,6 +236,7 @@
       const mine = rows.filter((row) => row.author_id === state.deviceId);
       const other = rows.filter((row) => row.author_id !== state.deviceId);
 
+      updatePersonLabels();
       renderFinalColumn(el.finalMine, mine);
       renderFinalColumn(el.finalOther, other);
       el.finalView.classList.remove("hidden");
@@ -264,6 +286,16 @@
     el.toolsCard.classList.remove("hidden");
   }
 
+  function updatePersonLabels() {
+    const myName = state.personRole === "sevgi" ? "Sevgi" : "Batu";
+    const otherName = state.personRole === "sevgi" ? "Batu" : "Sevgi";
+
+    el.myLinesTitle.textContent = `${myName} - Meine Zeilen`;
+    el.otherLinesTitle.textContent = otherName;
+    el.finalMineTitle.textContent = myName;
+    el.finalOtherTitle.textContent = otherName;
+  }
+
   function setStatus(message, isError = false) {
     el.sessionStatus.textContent = message;
     el.sessionStatus.style.color = isError ? "#8c4d4d" : "";
@@ -271,15 +303,19 @@
 
   function resetLocalSession() {
     localStorage.removeItem(STORAGE_CODE_KEY);
+    localStorage.removeItem(STORAGE_ROLE_KEY);
     state.relationshipCode = "";
+    state.personRole = "batu";
     state.sectionIndex = 0;
     state.lines = [];
     el.relationshipCode.value = "";
+    el.personRole.value = "batu";
     el.progressCard.classList.add("hidden");
     el.sectionCard.classList.add("hidden");
     el.finalCard.classList.add("hidden");
     el.finalView.classList.add("hidden");
     el.toolsCard.classList.add("hidden");
+    updatePersonLabels();
     setStatus("Lokale Session-Daten wurden geloescht.");
   }
 

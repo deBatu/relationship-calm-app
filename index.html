@@ -18,6 +18,11 @@
 
       <section class="card" id="sessionCard">
         <h2>Session oeffnen</h2>
+        <label for="personRole">Ich bin</label>
+        <select id="personRole">
+          <option value="batu">Batu</option>
+          <option value="sevgi">Sevgi</option>
+        </select>
         <label for="relationshipCode">6-stelliger Beziehungs-Code</label>
         <input
           id="relationshipCode"
@@ -51,13 +56,13 @@
 
         <div class="split-list">
           <div>
-            <h3>Batu - Meine Zeilen</h3>
+            <h3 id="myLinesTitle">Meine Zeilen</h3>
             <ul id="myLinesList" class="line-list">
               <li class="subtle">Noch keine Zeile gespeichert.</li>
             </ul>
           </div>
           <div>
-            <h3>Sevgi</h3>
+            <h3 id="otherLinesTitle">Andere Person</h3>
             <ul id="otherLinesList" class="line-list">
               <li class="subtle">Noch keine Zeile vorhanden.</li>
             </ul>
@@ -77,11 +82,11 @@
         <button id="loadFinalBtn" type="button">Abschlussansicht laden</button>
         <div id="finalView" class="final-grid hidden">
           <div class="final-col">
-            <h3>Batu</h3>
+            <h3 id="finalMineTitle">Ich</h3>
             <div id="finalMine"></div>
           </div>
           <div class="final-col">
-            <h3>Sevgi</h3>
+            <h3 id="finalOtherTitle">Andere Person</h3>
             <div id="finalOther"></div>
           </div>
         </div>

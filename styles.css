@@ -69,12 +69,14 @@ label {
 }
 
 input,
+select,
 button {
   width: 100%;
   font: inherit;
 }
 
-input {
+input,
+select {
   border: 1px solid var(--line);
   border-radius: 14px;
   background: #ffffff;
