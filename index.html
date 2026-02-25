@@ -94,9 +94,18 @@
 
       <section class="card hidden danger" id="toolsCard">
         <h2>Session-Werkzeuge</h2>
+        <label class="toggle-row" for="romanceToggle">
+          <input id="romanceToggle" type="checkbox" />
+          Romantische Mini-Gedichte anzeigen
+        </label>
         <button id="resetSessionBtn">Session lokal zurücksetzen</button>
       </section>
     </main>
+
+    <div id="poemPopup" class="poem-popup hidden" aria-live="polite">
+      <p id="poemPopupText"></p>
+      <button id="closePoemPopupBtn" type="button">Schließen</button>
+    </div>
 
     <script src="./config.js"></script>
     <script src="./app.js"></script>

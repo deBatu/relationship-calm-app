@@ -4,6 +4,21 @@
   const STORAGE_CODE_KEY = "calm_app_relationship_code";
   const STORAGE_DEVICE_KEY = "calm_app_device_id";
   const STORAGE_ROLE_KEY = "calm_app_person_role";
+  const STORAGE_ROMANCE_KEY = "calm_app_romance_enabled";
+  const TURKISH_POEMS = [
+    "Kalbim, senin yanında sakinleşiyor.",
+    "Aşk bazen konuşmak değil, anlamaktır.",
+    "Seninle en zor gün bile biraz daha yumuşak.",
+    "Bakışında evim var, sesinde huzurum.",
+    "Kalbime en çok sen iyi geliyorsun.",
+    "Birlikte susunca bile birbirimizi duyuyoruz.",
+    "Yanımda olduğunda dünya daha nazik.",
+    "Kırıldığımız yerde bile sevgiyi seçiyoruz.",
+    "Sevgi, aynı yöne birlikte yürümektir.",
+    "Kalbim, adını her gün yeniden öğreniyor.",
+    "Sana bakınca içimdeki fırtına diner.",
+    "Biz, birbirine iyi gelmeyi seçen iki kalbiz.",
+  ];
   const SECTION_DEFINITIONS = [
     { key: "appreciation", title: "1) Was ich an dir mag / schätze" },
     { key: "my_mistakes", title: "2) Was ich falsch gemacht habe" },
@@ -23,6 +38,8 @@
     relationshipCode: "",
     deviceId: getOrCreateDeviceId(),
     personRole: "batu",
+    romanceEnabled: true,
+    popupTimerId: null,
     sectionIndex: 0,
     lines: [],
   };
@@ -57,7 +74,11 @@
     finalOtherTitle: document.getElementById("finalOtherTitle"),
 
     toolsCard: document.getElementById("toolsCard"),
+    romanceToggle: document.getElementById("romanceToggle"),
     resetSessionBtn: document.getElementById("resetSessionBtn"),
+    poemPopup: document.getElementById("poemPopup"),
+    poemPopupText: document.getElementById("poemPopupText"),
+    closePoemPopupBtn: document.getElementById("closePoemPopupBtn"),
   };
 
   function init() {
@@ -77,6 +98,11 @@
       state.personRole = savedRole;
       el.personRole.value = savedRole;
     }
+    const savedRomanceSetting = localStorage.getItem(STORAGE_ROMANCE_KEY);
+    if (savedRomanceSetting === "false") {
+      state.romanceEnabled = false;
+    }
+    el.romanceToggle.checked = state.romanceEnabled;
 
     el.openSessionBtn.addEventListener("click", openSession);
     el.lineForm.addEventListener("submit", onLineSubmit);
@@ -84,7 +110,9 @@
     el.nextSectionBtn.addEventListener("click", goToNextSection);
     el.reloadSectionBtn.addEventListener("click", loadAndRenderCurrentSection);
     el.loadFinalBtn.addEventListener("click", loadFinalView);
+    el.romanceToggle.addEventListener("change", onRomanceToggleChange);
     el.resetSessionBtn.addEventListener("click", resetLocalSession);
+    el.closePoemPopupBtn.addEventListener("click", hidePoemPopup);
 
     registerServiceWorker();
   }
@@ -145,6 +173,7 @@
       setStatus("Zeile gespeichert.");
       await loadAndRenderCurrentSection();
       el.lineInput.focus();
+      maybeShowPoem("save");
     } catch (err) {
       setStatus(`Speichern fehlgeschlagen: ${err.message}`, true);
     }
@@ -211,12 +240,14 @@
     if (state.sectionIndex === 0) return;
     state.sectionIndex -= 1;
     loadAndRenderCurrentSection();
+    maybeShowPoem("section");
   }
 
   function goToNextSection() {
     if (state.sectionIndex >= SECTION_DEFINITIONS.length - 1) return;
     state.sectionIndex += 1;
     loadAndRenderCurrentSection();
+    maybeShowPoem("section");
   }
 
   async function loadFinalView() {
@@ -296,6 +327,48 @@
     el.finalOtherTitle.textContent = otherName;
   }
 
+  function onRomanceToggleChange() {
+    state.romanceEnabled = Boolean(el.romanceToggle.checked);
+    localStorage.setItem(STORAGE_ROMANCE_KEY, String(state.romanceEnabled));
+    if (!state.romanceEnabled) {
+      hidePoemPopup();
+    }
+  }
+
+  function maybeShowPoem(reason) {
+    if (!state.romanceEnabled) return;
+    if (reason === "save" && Math.random() > 0.45) return;
+    if (reason === "section" && Math.random() > 0.3) return;
+    showPoemPopup(randomPoem());
+  }
+
+  function showPoemPopup(text) {
+    if (!text) return;
+    clearPopupTimer();
+    el.poemPopupText.textContent = text;
+    el.poemPopup.classList.remove("hidden");
+    el.poemPopup.classList.add("show");
+    state.popupTimerId = window.setTimeout(hidePoemPopup, 5500);
+  }
+
+  function hidePoemPopup() {
+    clearPopupTimer();
+    el.poemPopup.classList.remove("show");
+    el.poemPopup.classList.add("hidden");
+  }
+
+  function clearPopupTimer() {
+    if (state.popupTimerId) {
+      window.clearTimeout(state.popupTimerId);
+      state.popupTimerId = null;
+    }
+  }
+
+  function randomPoem() {
+    const randomIndex = Math.floor(Math.random() * TURKISH_POEMS.length);
+    return TURKISH_POEMS[randomIndex];
+  }
+
   function setStatus(message, isError = false) {
     el.sessionStatus.textContent = message;
     el.sessionStatus.style.color = isError ? "#8c4d4d" : "";
@@ -304,12 +377,16 @@
   function resetLocalSession() {
     localStorage.removeItem(STORAGE_CODE_KEY);
     localStorage.removeItem(STORAGE_ROLE_KEY);
+    localStorage.removeItem(STORAGE_ROMANCE_KEY);
     state.relationshipCode = "";
     state.personRole = "batu";
+    state.romanceEnabled = true;
     state.sectionIndex = 0;
     state.lines = [];
     el.relationshipCode.value = "";
     el.personRole.value = "batu";
+    el.romanceToggle.checked = true;
+    hidePoemPopup();
     el.progressCard.classList.add("hidden");
     el.sectionCard.classList.add("hidden");
     el.finalCard.classList.add("hidden");

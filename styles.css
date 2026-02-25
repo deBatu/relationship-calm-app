@@ -83,6 +83,17 @@ label {
   font-size: 0.96rem;
 }
 
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.toggle-row input[type="checkbox"] {
+  width: auto;
+}
+
 input,
 select,
 button {
@@ -216,6 +227,40 @@ button:active {
   display: none;
 }
 
+.poem-popup {
+  position: fixed;
+  left: 14px;
+  right: 14px;
+  bottom: 14px;
+  z-index: 30;
+  background: #fff9fc;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 12px;
+  box-shadow: 0 10px 24px rgba(118, 74, 102, 0.2);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.poem-popup.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.poem-popup p {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.poem-popup button {
+  margin-top: 10px;
+  width: auto;
+  padding: 8px 12px;
+  font-size: 0.88rem;
+}
+
 @media (min-width: 768px) {
   .app-shell {
     padding: 28px 24px 40px;
@@ -232,5 +277,12 @@ button:active {
 
   .final-grid {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .poem-popup {
+    left: auto;
+    right: 24px;
+    bottom: 24px;
+    width: 340px;
   }
 }
