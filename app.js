@@ -9,7 +9,6 @@
   const TURKISH_POEMS = [
     "Kalbim, senin yanında sakinleşiyor.",
     "Aşk bazen konuşmak değil, anlamaktır.",
-    "Seninle en zor gün bile biraz daha yumuşak.",
     "Bakışında evim var, sesinde huzurum.",
     "Kalbime en çok sen iyi geliyorsun.",
     "Birlikte susunca bile birbirimizi duyuyoruz.",
@@ -19,6 +18,20 @@
     "Kalbim, adını her gün yeniden öğreniyor.",
     "Sana bakınca içimdeki fırtına diner.",
     "Biz, birbirine iyi gelmeyi seçen iki kalbiz.",
+    "Sen gülünce, dünya duruyor bir an.",
+    "Kalbim seninle hep hızlı atıyor.",
+    "Sensiz geçen an, eksik bir şarkı gibi.",
+    "Ellerini tuttuğumda zaman kayboluyor.",
+    "Senin gözlerinde kendi evimi buluyorum.",
+    "Bir tebessümün bin sözcükten daha fazla anlatıyor.",
+    "Sen benim en değerli kelimemsin.",
+    "Senin yanında kendimi evimde gibi hissediyorum.",
+    "Gülüşün günümü aydınlatıyor.",
+    "Seninle geçen zaman her şeyden değerli.",
+    "Senin sesin, en zor günlerimde bile güven veriyor.",
+    "Hayatım seninle daha anlamlı.",
+    "Senin varlığın bana güç veriyor.",
+    "Her bakışın kalbimi ısıtıyor.",
   ];
   const SECTION_DEFINITIONS = [
     { key: "appreciation", title: "1) Was ich an dir mag / schätze" },
