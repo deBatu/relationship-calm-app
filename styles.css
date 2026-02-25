@@ -205,6 +205,26 @@ button:active {
   margin-top: 14px;
 }
 
+.closure-form {
+  margin-top: 10px;
+}
+
+.closure-form button {
+  margin-bottom: 6px;
+}
+
+.closure-summary {
+  margin-top: 12px;
+}
+
+.summary-box {
+  margin: 8px 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff9fc;
+  padding: 10px 12px;
+}
+
 .final-col {
   border: 1px solid var(--line);
   border-radius: 14px;

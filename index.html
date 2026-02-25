@@ -79,7 +79,34 @@
       <section class="card hidden" id="finalCard">
         <h2>Abschlussansicht</h2>
         <p class="subtle">Nur Lesen. Antworten erscheinen nach Neuladen.</p>
+        <form id="closureForm" class="closure-form">
+          <label for="sharedGoalInput">Gemeinsames Mini-Ziel für 24h</label>
+          <input
+            id="sharedGoalInput"
+            maxlength="180"
+            placeholder="z. B. Heute Abend 10 Min ruhig reden."
+            autocomplete="off"
+            required
+          />
+          <label for="gratitudeInput">Mein Danke-Satz</label>
+          <input
+            id="gratitudeInput"
+            maxlength="180"
+            placeholder="z. B. Danke, dass du dir heute Zeit nimmst."
+            autocomplete="off"
+            required
+          />
+          <button id="saveClosureBtn" type="submit" class="primary">Abschluss speichern</button>
+        </form>
         <button id="loadFinalBtn" type="button">Abschlussansicht laden</button>
+        <div id="closureSummary" class="closure-summary hidden">
+          <h3>Gemeinsames Mini-Ziel (24h)</h3>
+          <p id="sharedGoalText" class="summary-box subtle">Noch kein Ziel gespeichert.</p>
+          <h3>Danke-Abschluss</h3>
+          <ul id="gratitudeList" class="line-list">
+            <li class="subtle">Noch keine Danke-Sätze gespeichert.</li>
+          </ul>
+        </div>
         <div id="finalView" class="final-grid hidden">
           <div class="final-col">
             <h3 id="finalMineTitle">Ich</h3>

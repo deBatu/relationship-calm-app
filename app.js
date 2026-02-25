@@ -42,6 +42,8 @@
     popupTimerId: null,
     sectionIndex: 0,
     lines: [],
+    sharedGoalText: "",
+    gratitudeRows: [],
   };
 
   const el = {
@@ -66,7 +68,14 @@
     nextSectionBtn: document.getElementById("nextSectionBtn"),
 
     finalCard: document.getElementById("finalCard"),
+    closureForm: document.getElementById("closureForm"),
+    sharedGoalInput: document.getElementById("sharedGoalInput"),
+    gratitudeInput: document.getElementById("gratitudeInput"),
+    saveClosureBtn: document.getElementById("saveClosureBtn"),
     loadFinalBtn: document.getElementById("loadFinalBtn"),
+    closureSummary: document.getElementById("closureSummary"),
+    sharedGoalText: document.getElementById("sharedGoalText"),
+    gratitudeList: document.getElementById("gratitudeList"),
     finalView: document.getElementById("finalView"),
     finalMine: document.getElementById("finalMine"),
     finalOther: document.getElementById("finalOther"),
@@ -109,6 +118,7 @@
     el.prevSectionBtn.addEventListener("click", goToPreviousSection);
     el.nextSectionBtn.addEventListener("click", goToNextSection);
     el.reloadSectionBtn.addEventListener("click", loadAndRenderCurrentSection);
+    el.closureForm.addEventListener("submit", onClosureSubmit);
     el.loadFinalBtn.addEventListener("click", loadFinalView);
     el.romanceToggle.addEventListener("change", onRomanceToggleChange);
     el.resetSessionBtn.addEventListener("click", resetLocalSession);
@@ -268,13 +278,148 @@
       const other = rows.filter((row) => row.author_id !== state.deviceId);
 
       updatePersonLabels();
+      await loadClosureData();
       renderFinalColumn(el.finalMine, mine);
       renderFinalColumn(el.finalOther, other);
       el.finalView.classList.remove("hidden");
+      el.closureSummary.classList.remove("hidden");
       setStatus("Abschlussansicht geladen.");
     } catch (err) {
       setStatus(`Abschlussansicht fehlgeschlagen: ${err.message}`, true);
     }
+  }
+
+  async function onClosureSubmit(event) {
+    event.preventDefault();
+    if (!hasOpenSession()) return;
+
+    const sharedGoalText = (el.sharedGoalInput.value || "").trim();
+    const gratitudeText = (el.gratitudeInput.value || "").trim();
+
+    if (!sharedGoalText || !gratitudeText) {
+      setStatus("Bitte gemeinsames Ziel und Danke-Satz ausfüllen.", true);
+      return;
+    }
+
+    try {
+      await apiRequest({
+        method: "POST",
+        table: "shared_24h_goals?on_conflict=relationship_code",
+        body: [
+          {
+            relationship_code: state.relationshipCode,
+            goal_text: sharedGoalText,
+            author_id: state.deviceId,
+            updated_at: new Date().toISOString(),
+          },
+        ],
+        extraHeaders: {
+          Prefer: "resolution=merge-duplicates",
+        },
+      });
+
+      await apiRequest({
+        method: "POST",
+        table: "gratitude_notes?on_conflict=relationship_code,author_id",
+        body: [
+          {
+            relationship_code: state.relationshipCode,
+            author_id: state.deviceId,
+            gratitude_text: gratitudeText,
+            updated_at: new Date().toISOString(),
+          },
+        ],
+        extraHeaders: {
+          Prefer: "resolution=merge-duplicates",
+        },
+      });
+
+      setStatus("Abschluss gespeichert.");
+      await loadClosureData();
+      el.closureSummary.classList.remove("hidden");
+      maybeShowPoem("save");
+    } catch (err) {
+      const message = String(err.message || "");
+      if (message.includes("Could not find the table")) {
+        setStatus(
+          "Abschluss-Tabellen fehlen noch in Supabase. Bitte den neuen SQL-Block aus README ausführen.",
+          true
+        );
+        return;
+      }
+      setStatus(`Abschluss speichern fehlgeschlagen: ${err.message}`, true);
+    }
+  }
+
+  async function loadClosureData() {
+    const goalParams = new URLSearchParams({
+      relationship_code: `eq.${state.relationshipCode}`,
+      limit: "1",
+    });
+    const gratitudeParams = new URLSearchParams({
+      relationship_code: `eq.${state.relationshipCode}`,
+      order: "updated_at.asc",
+      limit: "20",
+    });
+
+    const [goalRows, gratitudeRows] = await Promise.all([
+      apiRequest({
+        method: "GET",
+        table: `shared_24h_goals?${goalParams.toString()}`,
+      }),
+      apiRequest({
+        method: "GET",
+        table: `gratitude_notes?${gratitudeParams.toString()}`,
+      }),
+    ]);
+
+    state.sharedGoalText = goalRows[0] && goalRows[0].goal_text ? goalRows[0].goal_text : "";
+    state.gratitudeRows = gratitudeRows || [];
+    const myGratitude = state.gratitudeRows.find((row) => row.author_id === state.deviceId);
+    el.sharedGoalInput.value = state.sharedGoalText || "";
+    el.gratitudeInput.value = myGratitude ? myGratitude.gratitude_text : "";
+    renderClosureSummary();
+  }
+
+  function renderClosureSummary() {
+    if (state.sharedGoalText) {
+      el.sharedGoalText.textContent = state.sharedGoalText;
+      el.sharedGoalText.classList.remove("subtle");
+    } else {
+      el.sharedGoalText.textContent = "Noch kein Ziel gespeichert.";
+      el.sharedGoalText.classList.add("subtle");
+    }
+
+    const mine = state.gratitudeRows.find((row) => row.author_id === state.deviceId) || null;
+    const other = state.gratitudeRows.find((row) => row.author_id !== state.deviceId) || null;
+    const myName = state.personRole === "sevgi" ? "Sevgi" : "Batu";
+    const otherName = state.personRole === "sevgi" ? "Batu" : "Sevgi";
+
+    const gratitudeItems = [];
+    if (mine) {
+      gratitudeItems.push(
+        `<li><div class="line-row"><span class="line-text"><strong>${escapeHtml(
+          myName
+        )}:</strong> ${escapeHtml(mine.gratitude_text)}</span><span class="meta">${formatDate(
+          mine.updated_at
+        )}</span></div></li>`
+      );
+    }
+    if (other) {
+      gratitudeItems.push(
+        `<li><div class="line-row"><span class="line-text"><strong>${escapeHtml(
+          otherName
+        )}:</strong> ${escapeHtml(other.gratitude_text)}</span><span class="meta">${formatDate(
+          other.updated_at
+        )}</span></div></li>`
+      );
+    }
+
+    if (!gratitudeItems.length) {
+      el.gratitudeList.innerHTML = '<li class="subtle">Noch keine Danke-Sätze gespeichert.</li>';
+      return;
+    }
+    el.gratitudeList.innerHTML = gratitudeItems.join("");
   }
 
   function renderFinalColumn(target, rows) {
@@ -383,9 +528,17 @@
     state.romanceEnabled = true;
     state.sectionIndex = 0;
     state.lines = [];
+    state.sharedGoalText = "";
+    state.gratitudeRows = [];
     el.relationshipCode.value = "";
     el.personRole.value = "batu";
     el.romanceToggle.checked = true;
+    el.sharedGoalInput.value = "";
+    el.gratitudeInput.value = "";
+    el.sharedGoalText.textContent = "Noch kein Ziel gespeichert.";
+    el.sharedGoalText.classList.add("subtle");
+    el.gratitudeList.innerHTML = '<li class="subtle">Noch keine Danke-Sätze gespeichert.</li>';
+    el.closureSummary.classList.add("hidden");
     hidePoemPopup();
     el.progressCard.classList.add("hidden");
     el.sectionCard.classList.add("hidden");
