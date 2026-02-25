@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#7d95b7" />
+    <title>Konflikt-Kompass</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="app-header">
+        <h1>Konflikt-Kompass</h1>
+        <p class="subtle">
+          Diese App ersetzt kein Gespraech - sie soll es moeglich machen.
+        </p>
+      </header>
+
+      <section class="card" id="sessionCard">
+        <h2>1. Session oeffnen</h2>
+        <label for="relationshipCode">6-stelliger Beziehungs-Code</label>
+        <input
+          id="relationshipCode"
+          maxlength="6"
+          pattern="[0-9]{6}"
+          placeholder="z. B. 482913"
+          inputmode="numeric"
+        />
+        <button id="openSessionBtn" class="primary">Session oeffnen</button>
+        <p id="sessionStatus" class="subtle"></p>
+      </section>
+
+      <section class="card hidden" id="reflectionCard">
+        <h2>2. Trigger-Reflexion</h2>
+        <form id="reflectionForm">
+          <label for="triggerType">Was triggert mich gerade?</label>
+          <select id="triggerType" required>
+            <option value="" selected disabled>Bitte waehlen</option>
+            <option value="Eifersucht">Eifersucht</option>
+            <option value="Respekt">Respekt</option>
+            <option value="Missverstaendnis">Missverstaendnis</option>
+            <option value="Angst">Angst</option>
+            <option value="Sonstiges">Sonstiges</option>
+          </select>
+
+          <label for="currentFeeling">Was fuehle ich gerade?</label>
+          <textarea id="currentFeeling" rows="3" required></textarea>
+
+          <label for="currentNeed">Was brauche ich gerade wirklich?</label>
+          <textarea id="currentNeed" rows="3" required></textarea>
+
+          <button type="submit" class="primary">Antwort speichern</button>
+        </form>
+      </section>
+
+      <section class="card hidden" id="partnerCard">
+        <h2>3. Partner-Antwort</h2>
+        <p class="subtle">
+          Antworten erscheinen nach erneutem Laden.
+        </p>
+        <div id="partnerAnswer" class="answer-box">
+          <p class="subtle">Noch keine Antwort der anderen Person gefunden.</p>
+        </div>
+        <button id="reloadPartnerBtn">Antwort neu laden</button>
+      </section>
+
+      <section class="card hidden" id="commitmentCard">
+        <h2>4. Mini-Commitment</h2>
+        <form id="commitmentForm">
+          <label for="nextCommitment">Was mache ich beim naechsten Mal konkret anders?</label>
+          <textarea id="nextCommitment" rows="3" required></textarea>
+          <button type="submit" class="primary">Commitment speichern</button>
+        </form>
+
+        <div class="commitments">
+          <h3>Commitments</h3>
+          <div id="myCommitment" class="answer-box"></div>
+          <div id="otherCommitment" class="answer-box"></div>
+        </div>
+      </section>
+
+      <section class="card hidden danger" id="toolsCard">
+        <h2>Session-Werkzeuge</h2>
+        <button id="resetSessionBtn">Session lokal zuruecksetzen</button>
+      </section>
+    </main>
+
+    <script src="./config.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

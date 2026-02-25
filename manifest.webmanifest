@@ -1,0 +1,9 @@
+{
+  "name": "Konflikt-Kompass",
+  "short_name": "Konflikt",
+  "description": "Ruhige Reflexion bei wiederkehrenden Beziehungskonflikten.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f3efe7",
+  "theme_color": "#7d95b7"
+}
