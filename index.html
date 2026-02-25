@@ -4,21 +4,20 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#7d95b7" />
-    <title>Konflikt-Kompass</title>
+    <title>Pundik 🤍</title>
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
     <main class="app-shell">
       <header class="app-header">
-        <h1>Konflikt-Kompass</h1>
-        <p class="subtle">
-          Diese App ersetzt kein Gespraech - sie soll es moeglich machen.
-        </p>
+        <h1>Pundik 🤍</h1>
+        <p class="subtle">Hier geht es nicht um Recht haben, sondern um Verstehen.</p>
+        <p class="subtle">Private Reflexion fuer Batu und Sevgi.</p>
       </header>
 
       <section class="card" id="sessionCard">
-        <h2>1. Session oeffnen</h2>
+        <h2>Session oeffnen</h2>
         <label for="relationshipCode">6-stelliger Beziehungs-Code</label>
         <input
           id="relationshipCode"
@@ -31,52 +30,60 @@
         <p id="sessionStatus" class="subtle"></p>
       </section>
 
-      <section class="card hidden" id="reflectionCard">
-        <h2>2. Trigger-Reflexion</h2>
-        <form id="reflectionForm">
-          <label for="triggerType">Was triggert mich gerade?</label>
-          <select id="triggerType" required>
-            <option value="" selected disabled>Bitte waehlen</option>
-            <option value="Eifersucht">Eifersucht</option>
-            <option value="Respekt">Respekt</option>
-            <option value="Missverstaendnis">Missverstaendnis</option>
-            <option value="Angst">Angst</option>
-            <option value="Sonstiges">Sonstiges</option>
-          </select>
-
-          <label for="currentFeeling">Was fuehle ich gerade?</label>
-          <textarea id="currentFeeling" rows="3" required></textarea>
-
-          <label for="currentNeed">Was brauche ich gerade wirklich?</label>
-          <textarea id="currentNeed" rows="3" required></textarea>
-
-          <button type="submit" class="primary">Antwort speichern</button>
-        </form>
+      <section class="card hidden" id="progressCard">
+        <p id="progressText" class="progress">Bereich 1 von 5</p>
+        <p class="subtle">Eine Aussage pro Zeile. Nach Absenden erscheint direkt die naechste Zeile.</p>
       </section>
 
-      <section class="card hidden" id="partnerCard">
-        <h2>3. Partner-Antwort</h2>
-        <p class="subtle">
-          Antworten erscheinen nach erneutem Laden.
-        </p>
-        <div id="partnerAnswer" class="answer-box">
-          <p class="subtle">Noch keine Antwort der anderen Person gefunden.</p>
+      <section class="card hidden" id="sectionCard">
+        <h2 id="sectionTitle"></h2>
+        <form id="lineForm">
+          <label for="lineInput">Meine Aussage</label>
+          <input
+            id="lineInput"
+            maxlength="240"
+            placeholder="Kurzer, ehrlicher Satz..."
+            autocomplete="off"
+            required
+          />
+          <button type="submit" class="primary">Absenden</button>
+        </form>
+
+        <div class="split-list">
+          <div>
+            <h3>Batu - Meine Zeilen</h3>
+            <ul id="myLinesList" class="line-list">
+              <li class="subtle">Noch keine Zeile gespeichert.</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Sevgi</h3>
+            <ul id="otherLinesList" class="line-list">
+              <li class="subtle">Noch keine Zeile vorhanden.</li>
+            </ul>
+          </div>
         </div>
-        <button id="reloadPartnerBtn">Antwort neu laden</button>
+
+        <div class="toolbar">
+          <button id="prevSectionBtn" type="button">Vorheriger Bereich</button>
+          <button id="reloadSectionBtn" type="button">Neu laden</button>
+          <button id="nextSectionBtn" type="button">Naechster Bereich</button>
+        </div>
       </section>
 
-      <section class="card hidden" id="commitmentCard">
-        <h2>4. Mini-Commitment</h2>
-        <form id="commitmentForm">
-          <label for="nextCommitment">Was mache ich beim naechsten Mal konkret anders?</label>
-          <textarea id="nextCommitment" rows="3" required></textarea>
-          <button type="submit" class="primary">Commitment speichern</button>
-        </form>
-
-        <div class="commitments">
-          <h3>Commitments</h3>
-          <div id="myCommitment" class="answer-box"></div>
-          <div id="otherCommitment" class="answer-box"></div>
+      <section class="card hidden" id="finalCard">
+        <h2>Abschlussansicht</h2>
+        <p class="subtle">Nur Lesen. Antworten erscheinen nach Neuladen.</p>
+        <button id="loadFinalBtn" type="button">Abschlussansicht laden</button>
+        <div id="finalView" class="final-grid hidden">
+          <div class="final-col">
+            <h3>Batu</h3>
+            <div id="finalMine"></div>
+          </div>
+          <div class="final-col">
+            <h3>Sevgi</h3>
+            <div id="finalOther"></div>
+          </div>
         </div>
       </section>
 

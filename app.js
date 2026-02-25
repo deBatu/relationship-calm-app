@@ -3,6 +3,16 @@
 
   const STORAGE_CODE_KEY = "calm_app_relationship_code";
   const STORAGE_DEVICE_KEY = "calm_app_device_id";
+  const SECTION_DEFINITIONS = [
+    { key: "appreciation", title: "1) Was ich an dir mag / schaetze" },
+    { key: "my_mistakes", title: "2) Was ich falsch gemacht habe" },
+    { key: "wishes", title: "3) Was ich mir von dir wuensche" },
+    {
+      key: "my_self_reflection",
+      title: "4) Was ich selbst besser haette machen koennen",
+    },
+    { key: "future_rules", title: "5) Was wir kuenftig besser machen wollen" },
+  ];
 
   const config = window.APP_CONFIG || {};
   const supabaseUrl = (config.SUPABASE_URL || "").replace(/\/$/, "");
@@ -11,6 +21,8 @@
   const state = {
     relationshipCode: "",
     deviceId: getOrCreateDeviceId(),
+    sectionIndex: 0,
+    lines: [],
   };
 
   const el = {
@@ -18,21 +30,24 @@
     openSessionBtn: document.getElementById("openSessionBtn"),
     sessionStatus: document.getElementById("sessionStatus"),
 
-    reflectionCard: document.getElementById("reflectionCard"),
-    reflectionForm: document.getElementById("reflectionForm"),
-    triggerType: document.getElementById("triggerType"),
-    currentFeeling: document.getElementById("currentFeeling"),
-    currentNeed: document.getElementById("currentNeed"),
+    progressCard: document.getElementById("progressCard"),
+    progressText: document.getElementById("progressText"),
 
-    partnerCard: document.getElementById("partnerCard"),
-    partnerAnswer: document.getElementById("partnerAnswer"),
-    reloadPartnerBtn: document.getElementById("reloadPartnerBtn"),
+    sectionCard: document.getElementById("sectionCard"),
+    sectionTitle: document.getElementById("sectionTitle"),
+    lineForm: document.getElementById("lineForm"),
+    lineInput: document.getElementById("lineInput"),
+    myLinesList: document.getElementById("myLinesList"),
+    otherLinesList: document.getElementById("otherLinesList"),
+    prevSectionBtn: document.getElementById("prevSectionBtn"),
+    reloadSectionBtn: document.getElementById("reloadSectionBtn"),
+    nextSectionBtn: document.getElementById("nextSectionBtn"),
 
-    commitmentCard: document.getElementById("commitmentCard"),
-    commitmentForm: document.getElementById("commitmentForm"),
-    nextCommitment: document.getElementById("nextCommitment"),
-    myCommitment: document.getElementById("myCommitment"),
-    otherCommitment: document.getElementById("otherCommitment"),
+    finalCard: document.getElementById("finalCard"),
+    loadFinalBtn: document.getElementById("loadFinalBtn"),
+    finalView: document.getElementById("finalView"),
+    finalMine: document.getElementById("finalMine"),
+    finalOther: document.getElementById("finalOther"),
 
     toolsCard: document.getElementById("toolsCard"),
     resetSessionBtn: document.getElementById("resetSessionBtn"),
@@ -52,9 +67,11 @@
     }
 
     el.openSessionBtn.addEventListener("click", openSession);
-    el.reflectionForm.addEventListener("submit", onReflectionSubmit);
-    el.reloadPartnerBtn.addEventListener("click", loadPartnerReflection);
-    el.commitmentForm.addEventListener("submit", onCommitmentSubmit);
+    el.lineForm.addEventListener("submit", onLineSubmit);
+    el.prevSectionBtn.addEventListener("click", goToPreviousSection);
+    el.nextSectionBtn.addEventListener("click", goToNextSection);
+    el.reloadSectionBtn.addEventListener("click", loadAndRenderCurrentSection);
+    el.loadFinalBtn.addEventListener("click", loadFinalView);
     el.resetSessionBtn.addEventListener("click", resetLocalSession);
 
     registerServiceWorker();
@@ -74,151 +91,162 @@
     setStatus("Session geoeffnet.");
 
     showAppSections();
-    await loadPartnerReflection();
-    await loadCommitments();
+    await loadAndRenderCurrentSection();
+    el.lineInput.focus();
   }
 
-  async function onReflectionSubmit(event) {
+  async function onLineSubmit(event) {
     event.preventDefault();
     if (!hasOpenSession()) return;
+
+    const section = SECTION_DEFINITIONS[state.sectionIndex];
+    if (!section) return;
+
+    const lineText = (el.lineInput.value || "").trim();
+    if (!lineText) {
+      setStatus("Bitte eine kurze Zeile eingeben.", true);
+      return;
+    }
 
     const payload = {
       relationship_code: state.relationshipCode,
       author_id: state.deviceId,
-      trigger_type: el.triggerType.value,
-      feeling: el.currentFeeling.value.trim(),
-      need_text: el.currentNeed.value.trim(),
+      section_key: section.key,
+      line_text: lineText,
     };
-
-    if (!payload.trigger_type || !payload.feeling || !payload.need_text) {
-      setStatus("Bitte alle Pflichtfelder ausfuellen.", true);
-      return;
-    }
 
     try {
       await apiRequest({
         method: "POST",
-        table: "reflections",
+        table: "section_lines",
         body: [payload],
       });
-      el.reflectionForm.reset();
-      setStatus("Antwort gespeichert.");
+      el.lineForm.reset();
+      setStatus("Zeile gespeichert.");
+      await loadAndRenderCurrentSection();
+      el.lineInput.focus();
     } catch (err) {
       setStatus(`Speichern fehlgeschlagen: ${err.message}`, true);
     }
   }
 
-  async function loadPartnerReflection() {
+  async function loadAndRenderCurrentSection() {
+    if (!hasOpenSession()) return;
+
+    try {
+      const section = SECTION_DEFINITIONS[state.sectionIndex];
+      if (!section) return;
+
+      const params = new URLSearchParams({
+        relationship_code: `eq.${state.relationshipCode}`,
+        section_key: `eq.${section.key}`,
+        order: "created_at.asc",
+        limit: "300",
+      });
+
+      state.lines = await apiRequest({
+        method: "GET",
+        table: `section_lines?${params.toString()}`,
+      });
+      renderCurrentSection();
+      setStatus("Bereich aktualisiert.");
+    } catch (err) {
+      setStatus(`Laden fehlgeschlagen: ${err.message}`, true);
+    }
+  }
+
+  function renderCurrentSection() {
+    const section = SECTION_DEFINITIONS[state.sectionIndex];
+    if (!section) return;
+
+    const mine = state.lines.filter((line) => line.author_id === state.deviceId);
+    const other = state.lines.filter((line) => line.author_id !== state.deviceId);
+
+    el.sectionTitle.textContent = section.title;
+    el.progressText.textContent = `Bereich ${state.sectionIndex + 1} von ${SECTION_DEFINITIONS.length}`;
+    renderLinesList(el.myLinesList, mine, "Noch keine Zeile gespeichert.");
+    renderLinesList(el.otherLinesList, other, "Noch keine Zeile vorhanden.");
+    el.prevSectionBtn.disabled = state.sectionIndex === 0;
+    el.nextSectionBtn.disabled = state.sectionIndex === SECTION_DEFINITIONS.length - 1;
+  }
+
+  function renderLinesList(target, lines, emptyMessage) {
+    if (!lines.length) {
+      target.innerHTML = `<li class="subtle">${escapeHtml(emptyMessage)}</li>`;
+      return;
+    }
+
+    target.innerHTML = lines
+      .map(
+        (line) =>
+          `<li><div class="line-row"><span class="line-text">${escapeHtml(
+            line.line_text
+          )}</span><span class="meta">${formatDate(line.created_at)}</span></div></li>`
+      )
+      .join("");
+  }
+
+  function goToPreviousSection() {
+    if (state.sectionIndex === 0) return;
+    state.sectionIndex -= 1;
+    loadAndRenderCurrentSection();
+  }
+
+  function goToNextSection() {
+    if (state.sectionIndex >= SECTION_DEFINITIONS.length - 1) return;
+    state.sectionIndex += 1;
+    loadAndRenderCurrentSection();
+  }
+
+  async function loadFinalView() {
     if (!hasOpenSession()) return;
 
     try {
       const params = new URLSearchParams({
         relationship_code: `eq.${state.relationshipCode}`,
-        order: "created_at.desc",
-        limit: "20",
+        order: "created_at.asc",
+        limit: "1200",
       });
 
       const rows = await apiRequest({
         method: "GET",
-        table: `reflections?${params.toString()}`,
+        table: `section_lines?${params.toString()}`,
       });
+      const mine = rows.filter((row) => row.author_id === state.deviceId);
+      const other = rows.filter((row) => row.author_id !== state.deviceId);
 
-      const partnerEntry = rows.find((r) => r.author_id !== state.deviceId);
-      renderPartnerReflection(partnerEntry || null);
+      renderFinalColumn(el.finalMine, mine);
+      renderFinalColumn(el.finalOther, other);
+      el.finalView.classList.remove("hidden");
+      setStatus("Abschlussansicht geladen.");
     } catch (err) {
-      el.partnerAnswer.innerHTML = `<p class="subtle">Fehler beim Laden: ${escapeHtml(
-        err.message
-      )}</p>`;
+      setStatus(`Abschlussansicht fehlgeschlagen: ${err.message}`, true);
     }
   }
 
-  async function onCommitmentSubmit(event) {
-    event.preventDefault();
-    if (!hasOpenSession()) return;
-
-    const commitmentText = el.nextCommitment.value.trim();
-    if (!commitmentText) {
-      setStatus("Bitte ein Commitment eintragen.", true);
+  function renderFinalColumn(target, rows) {
+    if (!rows.length) {
+      target.innerHTML = '<p class="subtle">Noch keine Aussagen vorhanden.</p>';
       return;
     }
 
-    const payload = {
-      relationship_code: state.relationshipCode,
-      author_id: state.deviceId,
-      commitment_text: commitmentText,
-      updated_at: new Date().toISOString(),
-    };
+    target.innerHTML = SECTION_DEFINITIONS.map((section) => {
+      const sectionRows = rows.filter((row) => row.section_key === section.key);
+      const sectionLines = sectionRows.length
+        ? `<ul class="line-list">${sectionRows
+            .map(
+              (row) =>
+                `<li><div class="line-row"><span class="line-text">${escapeHtml(
+                  row.line_text
+                )}</span><span class="meta">${formatDate(row.created_at)}</span></div></li>`
+            )
+            .join("")}</ul>`
+        : '<p class="subtle">Keine Aussage.</p>';
 
-    try {
-      await apiRequest({
-        method: "POST",
-        table: "commitments?on_conflict=relationship_code,author_id",
-        body: [payload],
-        extraHeaders: {
-          Prefer: "resolution=merge-duplicates",
-        },
-      });
-      el.commitmentForm.reset();
-      await loadCommitments();
-      setStatus("Commitment gespeichert.");
-    } catch (err) {
-      setStatus(`Commitment fehlgeschlagen: ${err.message}`, true);
-    }
-  }
-
-  async function loadCommitments() {
-    if (!hasOpenSession()) return;
-
-    try {
-      const params = new URLSearchParams({
-        relationship_code: `eq.${state.relationshipCode}`,
-        order: "updated_at.desc",
-      });
-
-      const rows = await apiRequest({
-        method: "GET",
-        table: `commitments?${params.toString()}`,
-      });
-
-      const mine = rows.find((r) => r.author_id === state.deviceId) || null;
-      const other = rows.find((r) => r.author_id !== state.deviceId) || null;
-
-      renderCommitment(el.myCommitment, "Mein Commitment", mine);
-      renderCommitment(el.otherCommitment, "Anderes Commitment", other);
-    } catch (err) {
-      el.myCommitment.innerHTML = `<p class="subtle">Fehler beim Laden: ${escapeHtml(
-        err.message
-      )}</p>`;
-      el.otherCommitment.innerHTML = "";
-    }
-  }
-
-  function renderPartnerReflection(entry) {
-    if (!entry) {
-      el.partnerAnswer.innerHTML =
-        '<p class="subtle">Noch keine Antwort der anderen Person gefunden.</p>';
-      return;
-    }
-
-    el.partnerAnswer.innerHTML = [
-      `<div class="meta">${formatDate(entry.created_at)}</div>`,
-      `<p><strong>Trigger:</strong> ${escapeHtml(entry.trigger_type)}</p>`,
-      `<p><strong>Gefuehl:</strong> ${escapeHtml(entry.feeling)}</p>`,
-      `<p><strong>Braucht gerade:</strong> ${escapeHtml(entry.need_text)}</p>`,
-    ].join("");
-  }
-
-  function renderCommitment(target, title, entry) {
-    if (!entry) {
-      target.innerHTML = `<p class="subtle">${title}: noch nichts gespeichert.</p>`;
-      return;
-    }
-
-    target.innerHTML = [
-      `<p><strong>${escapeHtml(title)}</strong></p>`,
-      `<div class="meta">${formatDate(entry.updated_at)}</div>`,
-      `<p>${escapeHtml(entry.commitment_text)}</p>`,
-    ].join("");
+      return `<section class="final-section"><h4>${escapeHtml(
+        section.title
+      )}</h4>${sectionLines}</section>`;
+    }).join("");
   }
 
   function hasOpenSession() {
@@ -230,9 +258,9 @@
   }
 
   function showAppSections() {
-    el.reflectionCard.classList.remove("hidden");
-    el.partnerCard.classList.remove("hidden");
-    el.commitmentCard.classList.remove("hidden");
+    el.progressCard.classList.remove("hidden");
+    el.sectionCard.classList.remove("hidden");
+    el.finalCard.classList.remove("hidden");
     el.toolsCard.classList.remove("hidden");
   }
 
@@ -244,10 +272,13 @@
   function resetLocalSession() {
     localStorage.removeItem(STORAGE_CODE_KEY);
     state.relationshipCode = "";
+    state.sectionIndex = 0;
+    state.lines = [];
     el.relationshipCode.value = "";
-    el.reflectionCard.classList.add("hidden");
-    el.partnerCard.classList.add("hidden");
-    el.commitmentCard.classList.add("hidden");
+    el.progressCard.classList.add("hidden");
+    el.sectionCard.classList.add("hidden");
+    el.finalCard.classList.add("hidden");
+    el.finalView.classList.add("hidden");
     el.toolsCard.classList.add("hidden");
     setStatus("Lokale Session-Daten wurden geloescht.");
   }

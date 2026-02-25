@@ -1,4 +1,4 @@
-const CACHE_NAME = "konflikt-kompass-v1";
+const CACHE_NAME = "konflikt-kompass-v2";
 const ASSETS = [
   "./",
   "./index.html",
