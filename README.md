@@ -1,15 +1,15 @@
 # Pundik 🤍
 
-Ruhige Mobile-first Web-App/PWA fuer zwei Personen. Die App ist absichtlich kein Chat:
+Ruhige Mobile-first Web-App/PWA für zwei Personen. Die App ist absichtlich kein Chat:
 eine Aussage pro Zeile, strukturiert in 5 Bereiche, plus Abschlussansicht.
 
 ## Bereiche (fix)
 
-1. Was ich an dir mag / schaetze
+1. Was ich an dir mag / schätze
 2. Was ich falsch gemacht habe
-3. Was ich mir von dir wuensche
-4. Was ich selbst besser haette machen koennen
-5. Was wir kuenftig besser machen wollen
+3. Was ich mir von dir wünsche
+4. Was ich selbst besser hätte machen können
+5. Was wir künftig besser machen wollen
 6. Abschlussansicht (nur Lesen)
 
 ## Verhalten
@@ -17,7 +17,7 @@ eine Aussage pro Zeile, strukturiert in 5 Bereiche, plus Abschlussansicht.
 - Pro Eingabe nur eine Zeile
 - Nach Absenden: Feld wird geleert, Zeile wird darunter angezeigt
 - Antworten der anderen Person erscheinen nach manuellem Neuladen
-- Zugriff ueber gemeinsamen 6-stelligen Code
+- Zugriff über gemeinsamen 6-stelligen Code
 - Kein Login
 
 ## 1) Supabase konfigurieren
@@ -31,7 +31,7 @@ window.APP_CONFIG = {
 };
 ```
 
-## 2) Supabase SQL ausfuehren
+## 2) Supabase SQL ausführen
 
 Im Supabase SQL Editor:
 
@@ -76,18 +76,18 @@ with check (true);
 
 ## 3) Lokal starten
 
-Projektordner oeffnen und starten:
+Projektordner öffnen und starten:
 
 ```bash
 npx serve
 ```
 
-Danach im Browser die lokale URL oeffnen (z. B. `http://localhost:3000`).
+Danach im Browser die lokale URL öffnen (z. B. `http://localhost:3000`).
 
 ## 4) Gemeinsam nutzen
 
-1. Beide oeffnen die gleiche URL
+1. Beide öffnen die gleiche URL
 2. Beide geben denselben 6-stelligen Code ein
 3. Jede Aussage als einzelne Zeile absenden
-4. Fuer neue Eintraege der anderen Person auf **Neu laden** klicken
-5. Am Ende **Abschlussansicht laden** fuer die Gesamtansicht
+4. Für neue Einträge der anderen Person auf **Neu laden** klicken
+5. Am Ende **Abschlussansicht laden** für die Gesamtansicht

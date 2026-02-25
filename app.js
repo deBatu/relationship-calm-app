@@ -5,14 +5,14 @@
   const STORAGE_DEVICE_KEY = "calm_app_device_id";
   const STORAGE_ROLE_KEY = "calm_app_person_role";
   const SECTION_DEFINITIONS = [
-    { key: "appreciation", title: "1) Was ich an dir mag / schaetze" },
+    { key: "appreciation", title: "1) Was ich an dir mag / schätze" },
     { key: "my_mistakes", title: "2) Was ich falsch gemacht habe" },
-    { key: "wishes", title: "3) Was ich mir von dir wuensche" },
+    { key: "wishes", title: "3) Was ich mir von dir wünsche" },
     {
       key: "my_self_reflection",
-      title: "4) Was ich selbst besser haette machen koennen",
+      title: "4) Was ich selbst besser hätte machen können",
     },
-    { key: "future_rules", title: "5) Was wir kuenftig besser machen wollen" },
+    { key: "future_rules", title: "5) Was wir künftig besser machen wollen" },
   ];
 
   const config = window.APP_CONFIG || {};
@@ -94,12 +94,12 @@
     const normalizedCode = rawCode.replace(/\D/g, "");
 
     if (!/^\d{6}$/.test(normalizedCode)) {
-      setStatus("Bitte einen gueltigen 6-stelligen Code eingeben.", true);
+      setStatus("Bitte einen gültigen 6-stelligen Code eingeben.", true);
       return;
     }
     const role = (el.personRole.value || "").trim();
     if (role !== "batu" && role !== "sevgi") {
-      setStatus("Bitte waehlen, ob du Batu oder Sevgi bist.", true);
+      setStatus("Bitte wählen, ob du Batu oder Sevgi bist.", true);
       return;
     }
 
@@ -107,7 +107,7 @@
     state.personRole = role;
     localStorage.setItem(STORAGE_CODE_KEY, normalizedCode);
     localStorage.setItem(STORAGE_ROLE_KEY, role);
-    setStatus("Session geoeffnet.");
+    setStatus("Session geöffnet.");
 
     showAppSections();
     updatePersonLabels();
@@ -273,7 +273,7 @@
 
   function hasOpenSession() {
     if (!state.relationshipCode) {
-      setStatus("Bitte zuerst eine Session oeffnen.", true);
+      setStatus("Bitte zuerst eine Session öffnen.", true);
       return false;
     }
     return true;
@@ -316,7 +316,7 @@
     el.finalView.classList.add("hidden");
     el.toolsCard.classList.add("hidden");
     updatePersonLabels();
-    setStatus("Lokale Session-Daten wurden geloescht.");
+    setStatus("Lokale Session-Daten wurden gelöscht.");
   }
 
   async function apiRequest({ method, table, body, extraHeaders }) {
