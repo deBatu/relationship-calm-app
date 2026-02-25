@@ -5,6 +5,7 @@
   const STORAGE_DEVICE_KEY = "calm_app_device_id";
   const STORAGE_ROLE_KEY = "calm_app_person_role";
   const STORAGE_ROMANCE_KEY = "calm_app_romance_enabled";
+  const MAX_MEMORY_LINES_PER_PERSON = 3;
   const TURKISH_POEMS = [
     "Kalbim, senin yanında sakinleşiyor.",
     "Aşk bazen konuşmak değil, anlamaktır.",
@@ -28,6 +29,7 @@
       title: "4) Was ich selbst besser hätte machen können",
     },
     { key: "future_rules", title: "5) Was wir künftig besser machen wollen" },
+    { key: "best_memory", title: "6) Meine schönste Erinnerung mit dir" },
   ];
 
   const config = window.APP_CONFIG || {};
@@ -165,6 +167,15 @@
       setStatus("Bitte eine kurze Zeile eingeben.", true);
       return;
     }
+    if (section.key === "best_memory") {
+      const currentMineCount = state.lines.filter(
+        (line) => line.author_id === state.deviceId
+      ).length;
+      if (currentMineCount >= MAX_MEMORY_LINES_PER_PERSON) {
+        setStatus("Für Erinnerungen sind maximal 3 Zeilen pro Person vorgesehen.", true);
+        return;
+      }
+    }
 
     const payload = {
       relationship_code: state.relationshipCode,
@@ -185,6 +196,14 @@
       el.lineInput.focus();
       maybeShowPoem("save");
     } catch (err) {
+      const message = String(err.message || "");
+      if (section.key === "best_memory" && message.includes("section_lines_section_key_check")) {
+        setStatus(
+          "Der Erinnerungs-Bereich braucht ein SQL-Update in Supabase. Bitte den neuen README-SQL ausführen.",
+          true
+        );
+        return;
+      }
       setStatus(`Speichern fehlgeschlagen: ${err.message}`, true);
     }
   }

@@ -1,7 +1,7 @@
 # Pundik 🤍
 
 Ruhige Mobile-first Web-App/PWA für zwei Personen. Die App ist absichtlich kein Chat:
-eine Aussage pro Zeile, strukturiert in 5 Bereiche, plus Abschlussansicht.
+eine Aussage pro Zeile, strukturiert in 6 Bereiche, plus Abschlussansicht.
 
 ## Bereiche (fix)
 
@@ -10,7 +10,8 @@ eine Aussage pro Zeile, strukturiert in 5 Bereiche, plus Abschlussansicht.
 3. Was ich mir von dir wünsche
 4. Was ich selbst besser hätte machen können
 5. Was wir künftig besser machen wollen
-6. Abschlussansicht (inkl. gemeinsames 24h-Ziel + Danke-Satz)
+6. Meine schönste Erinnerung mit dir (max. 3 Zeilen pro Person)
+7. Abschlussansicht (inkl. gemeinsames 24h-Ziel + Danke-Satz)
 
 ## Verhalten
 
@@ -47,7 +48,8 @@ create table if not exists section_lines (
       'my_mistakes',
       'wishes',
       'my_self_reflection',
-      'future_rules'
+      'future_rules',
+      'best_memory'
     )
   ),
   line_text text not null check (char_length(trim(line_text)) > 0),
@@ -56,6 +58,22 @@ create table if not exists section_lines (
 
 create index if not exists idx_section_lines_session
 on section_lines (relationship_code, section_key, created_at);
+
+alter table section_lines
+drop constraint if exists section_lines_section_key_check;
+
+alter table section_lines
+add constraint section_lines_section_key_check
+check (
+  section_key in (
+    'appreciation',
+    'my_mistakes',
+    'wishes',
+    'my_self_reflection',
+    'future_rules',
+    'best_memory'
+  )
+);
 
 alter table section_lines enable row level security;
 
